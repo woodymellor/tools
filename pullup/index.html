@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pull-Up Bootstrap</title><style>
+:root{color-scheme:dark;--bg:#0d1117;--card:#161b22;--line:#30363d;--muted:#8b949e;--text:#f0f6fc;--accent:#58a6ff;--good:#3fb950}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,sans-serif}main{max-width:700px;margin:auto;padding:18px 14px 90px}
+h1{font-size:25px;margin:4px 0}.sub,.muted{color:var(--muted)}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin:14px 0}.target{border-color:var(--accent)}h2{font-size:18px;margin:0 0 8px}h3{margin:0;font-size:16px}
+.exercise{border-top:1px solid var(--line);padding:14px 0}.exercise:first-of-type{border-top:0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+input,select,button,textarea{font:inherit;color:var(--text);background:#0d1117;border:1px solid var(--line);border-radius:9px;padding:10px}input{width:90px}textarea{width:100%;min-height:55px}
+button{cursor:pointer}.primary{background:#238636;border-color:#2ea043;font-weight:700}.nav{display:flex;gap:8px}.nav button{flex:1}.metric{display:flex;gap:8px;align-items:center;margin-top:9px;flex-wrap:wrap}.metric label{color:var(--muted);font-size:14px}
+.done{opacity:.55}.check{width:25px;height:25px}.best{color:var(--good);font-weight:700}.footer{font-size:13px;color:var(--muted);margin-top:25px}.danger{border-color:#6e3030}
+details{margin-top:18px}summary{cursor:pointer;color:var(--muted)}
+</style></head><body><main>
+<div class="top"><div><h1>Pull-Up Bootstrap</h1><div class="sub">0 → 1 strict pull-up</div></div><div class="pill" id="level"></div></div>
+<div class="card target"><div class="muted">TODAY'S PROGRESS TARGET</div><h2 id="target"></h2><div id="targetDetail"></div></div>
+<div class="card"><div class="row"><div><div class="muted">CURRENT SESSION</div><h2 id="sessionTitle"></h2></div><select id="sessionSelect"></select></div><p id="summary" class="muted"></p><div id="exercises"></div>
+<button class="primary" id="complete" style="width:100%;margin-top:8px">Complete workout</button></div>
+<div class="nav"><button id="prev">← Previous</button><button id="next">Next →</button></div>
+<div class="card"><h2>Progress</h2><div id="pbs"></div></div>
+<div class="card"><h2>Workout history</h2><div id="history" class="muted">No completed workouts yet.</div></div>
+<details><summary>Data & reset</summary><div class="card"><div class="nav"><button id="export">Export JSON</button><button id="importBtn">Import JSON</button></div><input type="file" id="importFile" accept=".json" hidden><button class="danger" id="reset" style="width:100%;margin-top:10px">Reset all data</button></div></details>
+<div class="footer">Pull-Up Bootstrap v0.1 · Fixed bar + adjustable rings + chair. Most work should remain submaximal; stop if a movement causes pain.</div>
+</main><script>
+const S=[
+{n:1,l:1,t:"Establish the baseline",s:"Learn the component skills and create your starting scoreboard.",e:[
+["Dead hang","2 comfortable hangs","hang","sec"],["Scapular pull-up","3 × 3","scap","reps"],["Ring row","3 × 5; choose an angle with 2–3 reps in reserve","row","reps"],["Top hold","3 comfortable holds","top","sec"],["Negative pull-up","3 controlled singles","neg","sec"]]},
+{n:2,l:1,t:"Beat something",s:"Repeat the foundations and create your first measurable improvement.",e:[
+["Active hang","3 × 5–10 sec","active","sec"],["Scapular pull-up","3 × 3","scap","reps"],["Ring row","3 × 6","row","reps"],["Top hold","3 sets","top","sec"],["Negative pull-up","3 singles; try to beat your best by ~1 sec","neg","sec"]]},
+{n:3,l:2,t:"Introduce the pull-up",s:"Begin practising the complete vertical pulling pattern with foot assistance.",e:[
+["Scapular pull-up","3 × 4","scap","reps"],["Ring row","3 × 7","row","reps"],["Foot-assisted pull-up","Learn technique, then 3 × 3","assist","reps"],["Negative pull-up","3 singles","neg","sec"]]},
+{n:4,l:2,t:"Accumulate",s:"Build controlled full-range assisted pulling volume.",e:[
+["Active hang","3 × 10 sec","active","sec"],["Scapular pull-up","3 × 4","scap","reps"],["Ring row","3 × 8","row","reps"],["Foot-assisted pull-up","3 × 4","assist","reps"],["Negative pull-up","2 singles","neg","sec"]]},
+{n:5,l:3,t:"First real benchmark",s:"One fresh strict attempt, then productive assisted work. Do not repeat failed attempts.",attempt:true,e:[
+["Strict pull-up attempt","1 fresh attempt","pullup","reps"],["Foot-assisted pull-up","4 × 3","assist","reps"],["Ring row","3 × 8","row","reps"],["Top hold","2 sets","top","sec"],["Negative pull-up","2 singles","neg","sec"]]},
+{n:6,l:3,t:"Reduce assistance",s:"Keep the full movement while deliberately asking less from your legs.",e:[
+["Scapular pull-up","3 × 5","scap","reps"],["Foot-assisted pull-up","4 × 4; minimum useful leg assistance","assist","reps"],["Ring row","3 × 9","row","reps"],["Negative pull-up","2 singles","neg","sec"]]},
+{n:7,l:4,t:"A — Strength",s:"One fresh attempt, then specific strength work.",attempt:true,loop:"A",e:[
+["Strict pull-up attempt","1 fresh attempt","pullup","reps"],["Foot-assisted pull-up","4 sets; progress reps or reduce assistance","assist","reps"],["Negative pull-up","2 controlled singles","neg","sec"],["Ring row","3 sets; progress reps or angle","row","reps"]]},
+{n:8,l:4,t:"B — Volume & control",s:"Build the supporting capacities without another maximal attempt.",loop:"B",e:[
+["Active hang","3 sets","active","sec"],["Scapular pull-up","3 sets","scap","reps"],["Foot-assisted pull-up","3 sets","assist","reps"],["Ring row","3 sets","row","reps"],["Top hold","2 sets","top","sec"]]}
+];
+const key="pullupBootstrap.v1";let d=JSON.parse(localStorage.getItem(key)||"null")||{session:1,logs:[],pb:{},notes:{},checks:{}};
+const save=()=>localStorage.setItem(key,JSON.stringify(d));
+const names={hang:"Dead hang",active:"Active hang",scap:"Scapular pull-ups",row:"Ring rows",top:"Top hold",neg:"Negative",assist:"Assisted pull-ups",pullup:"Strict pull-ups"};
+function cur(){let n=d.session;if(n<=8)return S[n-1];return S[(n%2)?6:7]}
+function target(x){if(x.n===1)return["Create your baseline","Record your best hang, hold and negative."];
+ if(x.attempt)return["One fresh strict pull-up attempt",d.pb.pullup?("Current best: "+d.pb.pullup+" rep(s)"):"Then move on to assisted work."];
+ let choices=x.e.filter(z=>["neg","row","assist","hang","top","scap"].includes(z[2]));let z=choices[(d.session-2)%choices.length],p=d.pb[z[2]];
+ return[p?("Beat your "+names[z[2]]+" best"):("Set a "+names[z[2]]+" best"),p?("Current best: "+p+" "+z[3]+". Aim for a small improvement."):"Record a clean result today."]}
+function render(){
+ let x=cur();level.textContent="Level "+x.l;sessionTitle.textContent="Session "+d.session+" · "+x.t;summary.textContent=x.s;
+ sessionSelect.innerHTML="";for(let i=1;i<=Math.max(8,d.session+2);i++){let o=document.createElement("option");o.value=i;o.textContent="Session "+i+(i>8?(i%2?" · A":" · B"):"");if(i===d.session)o.selected=true;sessionSelect.append(o)}
+ let tg=target(x);target.textContent=tg[0];targetDetail.textContent=tg[1];exercises.innerHTML="";
+ x.e.forEach((z,i)=>{let id=d.session+"-"+i,div=document.createElement("div");div.className="exercise "+(d.checks[id]?"done":"");div.innerHTML='<div class="row"><div><h3>'+z[0]+'</h3><div class="muted">'+z[1]+'</div></div><input class="check" type="checkbox" '+(d.checks[id]?"checked":"")+'></div><div class="metric"><label>Best today</label><input type="number" step="0.1" min="0" data-m="'+z[2]+'" placeholder="'+z[3]+'"><span>'+z[3]+'</span>'+(z[2]==="row"?'<input type="text" data-note="row" placeholder="foot/ring setup" style="width:150px">':z[2]==="assist"?'<input type="text" data-note="assist" placeholder="assistance note" style="width:150px">':'')+'</div>';
+ let c=div.querySelector(".check");c.onchange=()=>{d.checks[id]=c.checked;save();render()};let inp=div.querySelector("[data-m]");inp.value=d.notes[id]?.value??"";inp.onchange=()=>{d.notes[id]={...(d.notes[id]||{}),value:+inp.value,metric:z[2],unit:z[3]};save()};
+ let ni=div.querySelector("[data-note]");if(ni){ni.value=d.notes[id]?.note||"";ni.onchange=()=>{d.notes[id]={...(d.notes[id]||{}),note:ni.value,metric:z[2],unit:z[3],value:+inp.value};save()}} exercises.append(div)});
+ pbs.innerHTML=Object.keys(d.pb).length?Object.entries(d.pb).map(([k,v])=>'<div class="row"><span>'+names[k]+'</span><span class="best">'+v+' '+(k==="hang"||k==="active"||k==="top"||k==="neg"?"sec":"reps")+'</span></div>').join(""):'<span class="muted">Complete Session 1 to establish your baseline.</span>';
+ history.innerHTML=d.logs.length?d.logs.slice().reverse().map(a=>'<div>'+a.date+' · Session '+a.session+' · '+a.title+'</div>').join(""):"No completed workouts yet.";
+}
+complete.onclick=()=>{let x=cur();x.e.forEach((z,i)=>{let q=d.notes[d.session+"-"+i];if(q&&q.value>0)d.pb[z[2]]=Math.max(d.pb[z[2]]||0,q.value)});d.logs.push({date:new Date().toLocaleDateString(),session:d.session,title:x.t});d.session++;save();render();scrollTo(0,0)};
+prev.onclick=()=>{d.session=Math.max(1,d.session-1);save();render()};next.onclick=()=>{d.session++;save();render()};sessionSelect.onchange=()=>{d.session=+sessionSelect.value;save();render()};
+export.onclick=()=>{let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:"application/json"}));a.download="pullup-bootstrap.json";a.click();URL.revokeObjectURL(a.href)};
+importBtn.onclick=()=>importFile.click();importFile.onchange=async()=>{try{d=JSON.parse(await importFile.files[0].text());save();render()}catch(e){alert("Could not import that file.")}};
+reset.onclick=()=>{if(confirm("Delete all Pull-Up Bootstrap progress?")){localStorage.removeItem(key);location.reload()}};
+render();
+</script></body></html>
